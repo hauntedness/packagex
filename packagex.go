@@ -18,7 +18,7 @@ type Visitor struct {
 func (v Visitor) Walk(cfg *packages.Config, pattern ...string) error {
 	if cfg == nil {
 		cfg = &packages.Config{}
-		cfg.Mode = packages.NeedSyntax | packages.NeedFiles | packages.NeedTypes | packages.NeedTypesInfo
+		cfg.Mode = packages.NeedSyntax | packages.NeedFiles | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedName
 	}
 	packageList, err := packages.Load(cfg, pattern...)
 	if err != nil {
