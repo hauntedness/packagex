@@ -15,6 +15,10 @@ type Visitor struct {
 	CompositeLitVisitor func(*ast.CompositeLit, *ast.GenDecl, *ast.File, *packages.Package) error
 }
 
+// Walk walks the packages matched with the same rule as [packages]: https://pkg.go.dev/golang.org/x/tools/go/packages,
+// calling inside visitor function for each top declaration in each file of the packages
+//
+//	# Walk will return immediately once any visitor function have error
 func (v Visitor) Walk(cfg *packages.Config, pattern ...string) error {
 	if cfg == nil {
 		cfg = &packages.Config{}
@@ -67,4 +71,34 @@ func (v Visitor) Walk(cfg *packages.Config, pattern ...string) error {
 		}
 	}
 	return nil
+}
+
+// FieldName return the name of the struct field
+func FieldName(expr ast.Expr) string {
+	if starExpr, ok := expr.(*ast.StarExpr); ok {
+		if selector, ok := starExpr.X.(*ast.SelectorExpr); ok {
+			// type = *big.Int
+			var pkg = selector.X.(*ast.Ident).Name
+			var typ = selector.Sel.Name
+			return "*" + pkg + "." + typ
+		} else if ident, ok := starExpr.X.(*ast.Ident); ok {
+			// type = *int
+			return "*" + ident.Name
+		} else if star, ok := starExpr.X.(*ast.StarExpr); ok {
+			// type = **big.Int
+			return "*" + FieldName(star)
+		}
+	} else if selector, ok := expr.(*ast.SelectorExpr); ok {
+		// type = big.Int
+		var pkg = selector.X.(*ast.Ident).Name
+		var typ = selector.Sel.Name
+		return pkg + "." + typ
+	} else if ident, ok := expr.(*ast.Ident); ok {
+		// type = int
+		return ident.Name
+	} else if array, ok := expr.(*ast.ArrayType); ok {
+		// type = []*big.Int
+		return "[]" + FieldName(array.Elt)
+	}
+	return ""
 }
