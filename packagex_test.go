@@ -102,6 +102,10 @@ func TestTypeParam(t *testing.T) {
 	var visitor Visitor
 	visitor.StructVisitor = func(_ *ast.StructType, ctx Context) error {
 		if strings.Contains(ctx.TypeName(), "TypeParam") {
+			fieldList := ctx.TypeParams()
+			if fieldList.NumFields() != 1 {
+				t.Error("error get type params")
+			}
 			return nil
 		}
 		return nil
